@@ -1,0 +1,83 @@
+name: 'auto-build-ios'
+description: 'Builds and uploads the iOS application'
+inputs:
+  path-to-control-file:
+    description: 'The TSX file that holds the version-string and build number for Android'
+    required: true
+    default: constants.tsx
+
+  name-of-version-string:
+    description: 'The name of the version-string variable on the TSX file'
+    required: true
+    default: PUBLIC_VERSION
+
+  name-of-version-placeholder:
+    description: 'Tha placeholder value for the Version String'
+    required: true
+    default: "Interna"
+
+  name-of-build-string:
+    description: 'The name of the build version variable on the TSX file'
+    required: true
+    default: BUILD_IOS
+
+  node-version:
+    description: 'Node version to use'
+    required: true
+    default: 16.x
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check if version and build string are present on control-file. Locally change version string to tag
+      shell: bash
+      run: |
+        if [ $(grep -oP "${{inputs.name-of-version-string}} = 'Versión\s*\K[^';]+" ${{ inputs.path-to-control-file }}) ]; then echo "Version string present!"; else exit 1; fi
+        if [ $(grep -oP '${{ inputs.name-of-build-string }} = \s*\K\d+' ${{ inputs.path-to-control-file }}) ]; then echo "Build number present!"; else exit 1; fi
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3.6.0
+      with:
+        node-version: ${{inputs.node-version}}
+
+    - name: Setup Ionic
+      shell: bash
+      run: npm install -g @ionic/cli
+
+    - name: Install APP dependencies
+      shell: bash
+      run: npm install
+
+    - name: Build the app
+      shell: bash
+      env:
+        CI: ""
+      run: |
+        echo "Building the app ..."
+        ionic --max_old_space_size=2048 build 
+
+    - name: Build the iOS app
+      shell: bash
+      env:
+        CI: false
+      run: |
+        echo "Building the iOS app"
+        ionic capacitor build ios --release --prod
+        echo "Syncing"
+        npx cap sync
+
+    - name: Handle pods
+      shell: bash
+      working-directory: ./ios/App/
+      run: |
+        echo "Deintegrating pods ..."
+        pod deintegrate
+        echo "Rebuilding pods ..."
+        pod install
+
+    - name: Update xcode project
+      shell: bash
+      run: |
+        python ${{github.action_path}}/scripts/BuildHandler.py --constants-file ${{inputs.path-to-control-file}} --version-var ${{inputs.name-of-version-string}} --build-var ${{inputs.name-of-build-string}} --build-file ios/App/App.xcodeproj/project.pbxproj
+        cat ios/App/App.xcodeproj/project.pbxproj
