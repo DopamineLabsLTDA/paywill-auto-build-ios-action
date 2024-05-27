@@ -81,3 +81,7 @@ runs:
       run: |
         python ${{github.action_path}}/scripts/BuildHandler.py --constants-file ${{inputs.path-to-control-file}} --version-var ${{inputs.name-of-version-string}} --build-var ${{inputs.name-of-build-string}} --build-file ios/App/App.xcodeproj/project.pbxproj
         cat ios/App/App.xcodeproj/project.pbxproj
+
+    - name: Assemble IPA
+      shell: bash
+      run: xcodebuild -exportArchive -archivePath App.xcarchive -exportOptionsPlist ./ios/App/export.plist -exportPath output -allowProvisioningUpdates
