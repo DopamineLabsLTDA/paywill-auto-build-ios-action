@@ -30,6 +30,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install GNU grep
+      shell: bash
+      run: brew install grep
+
     - name: Check if version and build string are present on control-file. Locally change version string to tag
       shell: bash
       run: |
