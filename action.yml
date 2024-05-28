@@ -91,6 +91,7 @@ runs:
         cat ios/App/App.xcodeproj/project.pbxproj
 
     - name: Build the app with XCode
+      shell: bash
       run: xcodebuild -workspace './ios/App/App.xcworkspace' -scheme App -destination generic/platform=iOS -archivePath App.xcarchive archive
 
     - name: Assemble IPA
