@@ -71,6 +71,10 @@ runs:
         echo "Syncing"
         npx cap sync
 
+    - name: Generate the resources
+      shell: bash
+      run: npx @capacitor/assets generate --ios
+
     - name: Handle pods
       shell: bash
       working-directory: ./ios/App/
@@ -85,6 +89,9 @@ runs:
       run: |
         python ${{github.action_path}}/scripts/BuildHandler.py --constants-file ${{inputs.path-to-control-file}} --version-var ${{inputs.name-of-version-string}} --build-var ${{inputs.name-of-build-string}} --build-file ios/App/App.xcodeproj/project.pbxproj
         cat ios/App/App.xcodeproj/project.pbxproj
+
+    - name: Build the app with XCode
+        run: xcodebuild -workspace './ios/App/App.xcworkspace' -scheme App -destination generic/platform=iOS -archivePath App.xcarchive archive
 
     - name: Assemble IPA
       shell: bash
