@@ -21,6 +21,22 @@ inputs:
     required: true
     default: BUILD_IOS
 
+  appstore-api-key-id:
+    description: "The app store key id"
+    required: true
+
+  appstore-api-issuer-id:
+    description: "The app store api issuer"
+    required: true
+
+  apple-id: 
+    description: "The ID associated with the APP"
+    required: true
+
+  bundle-id:
+    description: "The APP bundle ID"
+    required: true
+
   node-version:
     description: 'Node version to use'
     required: true
@@ -97,3 +113,19 @@ runs:
     - name: Assemble IPA
       shell: bash
       run: xcodebuild -exportArchive -archivePath App.xcarchive -exportOptionsPlist ./ios/App/export.plist -exportPath output -allowProvisioningUpdates
+
+    - name: Setup bundle version and bundle short version
+      id: bundles
+      shell: bash
+      run: |
+        echo "BUNDLE_VERSION=$(ggrep -oP '${{ inputs.name-of-build-string }} = \s*\K\d+' ${{ inputs.path-to-control-file }})" >> "$GITHUB_OUTPUT"
+        echo "BUNDLE_SHORT_VERSION=$(ggrep -oP "${{inputs.name-of-version-string}} = 'Versión\s*\K[^';]+" ${{ inputs.path-to-control-file }})" >> "$GITHUB_OUTPUT"
+
+
+    - name: Upload to testfligh
+      shell: bash
+      run: |
+        echo "Starting upload"
+        ls ~/private_keys
+        xcrun altool --validate-app -f output/App.ipa -t ios --apiKey ${{ inputs.appstore-api-key-id }} --apiIssuer ${{ inputs.appstore-api-issuer-id }}
+        xcrun altool --upload-package output/App.ipa -t ios --apiKey ${{ inputs.appstore-api-key-id }} --apiIssuer ${{ inputs.appstore-api-issuer-id }} --apple-id ${{inputs.apple-id}} --bundle-id ${{inputs.bundle-id}} --bundle-version ${{steps.bundles.outputs.BUNDLE_VERSION}} --bundle-short-version-string ${{steps.bundles.outputs.BUNDLE_SHORT_VERSION}}
