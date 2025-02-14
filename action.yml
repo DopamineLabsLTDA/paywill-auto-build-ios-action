@@ -57,7 +57,7 @@ runs:
         if [ $(ggrep -oP '${{ inputs.name-of-build-string }} = \s*\K\d+' ${{ inputs.path-to-control-file }}) ]; then echo "Build number present!"; else exit 1; fi
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4.0.3
+      uses: actions/setup-node@v4.2.0
       with:
         node-version: ${{inputs.node-version}}
 
