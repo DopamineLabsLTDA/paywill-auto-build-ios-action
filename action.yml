@@ -36,6 +36,11 @@ inputs:
   bundle-id:
     description: "The APP bundle ID"
     required: true
+    
+  java-version:
+    description: 'Java version to use'
+    required: true
+    default: '21'
 
   node-version:
     description: 'Node version to use'
