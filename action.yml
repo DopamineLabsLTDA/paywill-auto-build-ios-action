@@ -45,7 +45,7 @@ inputs:
   node-version:
     description: 'Node version to use'
     required: true
-    default: 18
+    default: 20
 
 
 runs:
